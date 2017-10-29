@@ -4,9 +4,9 @@ import json
 import os
 import urllib2
 import urllib
-from credential.git import GitCredentialProvider
-from credential.trello import TrelloCredentialProvider
-from todo.trello import TrelloTodo
+from yukimt.task.credential.git import GitCredentialProvider
+from yukimt.task.credential.trello import TrelloCredentialProvider
+from yukimt.task.trello import TrelloManager
 
 
 class Importer(object):
@@ -17,15 +17,15 @@ class Importer(object):
         self.source_key = "source"
         self.url_key = "repository_url"
         self.repo_key = "repository_id"
-        self.keys = [self.source_type_key, self.source_key, self.repo_key, self.url_key]
+        self.list_key = "list"
+        self.keys = [self.source_type_key, self.source_key, self.repo_key, self.url_key, self.list_key]
 
         provider = TrelloCredentialProvider()
         self.trello_cred = provider.get()
         provider = GitCredentialProvider()
         self.git_cred = provider.get()
 
-        self.todo = TrelloTodo()
-        self.trello_conf = self.todo.get_conf()
+        self.manager = TrelloManager()
 
     def sync(self):
         conf = {}
@@ -66,11 +66,16 @@ input here: """)
         url = url.replace("github.com", "api.github.com/repos")
 
         repo_id = raw_input("Repository ID (Enter if you do not use Zenhub): ")
+
+        print "Input Board and List Name in Trello as destination of importing"
+        board = self.manager.get_board()
+        t_list = self.manager.get_list(board['id'])
         return {
             self.source_type_key: source_type,
             self.source_key: source,
             self.url_key: url,
-            self.repo_key: repo_id
+            self.repo_key: repo_id,
+            self.list_key: t_list
         }
             
     def get_issues(self, conf):
@@ -102,7 +107,8 @@ input here: """)
                 return issues
             for issue in issues:
                 for label in labels:
-                    if label in issue['labels']:
+                    issue_labels = [i.lower() for i in issue['labels']]
+                    if label.encode('utf-8').lower() in issue_labels:
                         result.append(issue)
                         break
             return result
@@ -116,7 +122,8 @@ input here: """)
 
             zen_issues = []
             for r in response['pipelines']:
-                if r['name'] in conf[self.source_key]:
+                sources = [s.lower() for s in conf[self.source_key]]
+                if r['name'].lower() in sources:
                     numbers = [i['issue_number'] for i in r['issues']]
                     zen_issues.extend(numbers)
 
@@ -127,8 +134,8 @@ input here: """)
             return result
 
     def import_issues(self, conf, issues):
-        list_id = self.trello_conf[self.todo.list_key]['id']
-        cards = self.todo.get_cards(list_id)
+        list_id = conf[self.list_key]['id']
+        cards = self.manager.get_cards(list_id)
         card_names = [c['name'] for c in cards]
         base_url = "https://trello.com/1/cards?key=%s&token=%s&idList=%s" % (
             self.trello_cred['key'], self.trello_cred['token'], list_id

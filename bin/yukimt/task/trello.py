@@ -3,23 +3,14 @@
 import json
 import os
 import urllib2
-from credential.trello import TrelloCredentialProvider
+from yukimt.task.credential.trello import TrelloCredentialProvider
+import sys
 
 
-class CurrentWork(object):
+class TrelloManager(object):
     def __init__(self):
         provider = TrelloCredentialProvider()
         self.cred = provider.get()
-
-    def get_id(self):
-        list_id = self.ask()
-        print "Your List ID is (for webhook): " + list_id
-
-
-    def ask(self):
-        board = self.get_board()
-        t_list = self.get_list(board['id'])
-        return t_list['id']
 
     def get_board(self):
         url = "https://trello.com/1/members/%s/boards?key=%s&token=%s&fields=name" % (
@@ -33,16 +24,30 @@ class CurrentWork(object):
         )
         return self.get_data("List", url)
 
+    def get_cards(self, list_id):
+        url = "https://trello.com/1/lists/%s/cards?key=%s&token=%s&fields=name" % (
+            list_id, self.cred['key'], self.cred['token']
+        )
+        result = urllib2.urlopen(url)
+        response = json.loads(result.read())
+        result.close()
+        return response
+
     def get_data(self, key, url):
-        ask_str = "target Trello %s name for current work: " % key
+        ask_str = "target Trello %s name: " % key
         new_name = raw_input(ask_str)
         new_name = new_name.decode('utf-8')
 
         result = urllib2.urlopen(url)
-        response = json.loads(result.read())
+        try:
+            response = json.loads(result.read())
+        except urllib2.URLError, e:
+            print "Error: Failed to authorize in Trello"
+            sys.exit(1)
+
         result.close()
-        #TODO: throw if not authorized
         for b in response:
             if b['name'] == new_name:
                 return b
-        #TODO: throw exception
+        print "Error: The target name is not found in Your Account"
+        sys.exit(1)

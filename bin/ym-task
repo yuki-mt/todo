@@ -1,0 +1,83 @@
+#!/usr/bin/python
+#coding=utf-8
+from yukimt.task.todo.trello import TrelloTodo
+from yukimt.task.todo.importer import Importer
+from yukimt.task.done.trello import Webhook
+from yukimt.task.done.toggl import TogglDone
+from yukimt.task.credential.toggl import TogglCredentialProvider
+from yukimt.task.credential.trello import TrelloCredentialProvider
+from yukimt.task.credential.git import GitCredentialProvider
+import sys
+
+if len(sys.argv) < 2:
+    print "Error: you need subcommand. Use one of [import, webhook, done, todo, toggl-token, trello-list, setup-cred]"
+    sys.exit(1)
+
+action_type = sys.argv[1]
+if action_type == 'import':
+    i = Importer()
+    if len(sys.argv) > 2 and sys.argv[2] == 'reset':
+        i.reset()
+    else:
+        i.sync()
+
+elif action_type == "done":
+    t = TogglDone()
+    if len(sys.argv) > 2 and sys.argv[2][0] == '-':
+        nDaysAgo = int(sys.argv[2][1:])
+        t.generate(nDaysAgo)
+    else:
+        t.generate()
+
+elif action_type == "webhook":
+    w = Webhook()
+    w.register()
+
+elif action_type == "todo":
+    t = TrelloTodo()
+    if len(sys.argv) > 2 and sys.argv[2] == 'reset':
+        t.reset()
+    else:
+        t.generate()
+
+elif action_type == "toggl-token":
+    t = TogglCredentialProvider()
+    print t.get_token()
+
+elif action_type == "trello-list":
+    w = Webhook()
+    print w.get_list_id()
+
+elif action_type == "setup-cred":
+    trello = TrelloCredentialProvider()
+    toggl = TogglCredentialProvider()
+    git = GitCredentialProvider()
+    if len(sys.argv) > 2 and sys.argv[2] == 'reset':
+        if len(sys.argv) > 3:
+            cred_type = sys.argv[3]
+            if cred_type == 'trello':
+                trello.reset()
+            elif cred_type == 'toggl':
+                toggl.reset()
+            elif cred_type == 'git':
+                git.reset()
+        else:
+            trello.reset()
+            toggl.reset()
+            git.reset()
+    else:
+        if len(sys.argv) > 2:
+            cred_type = sys.argv[2]
+            if cred_type == 'trello':
+                trello.get()
+            elif cred_type == 'toggl':
+                toggl.get()
+            elif cred_type == 'git':
+                git.reset()
+        trello.get()
+        toggl.get()
+        git.get()
+
+else:
+    print "Error: Unsupported subcommand. Use one of [import, webhook, done, todo, toggl-token, trello-list, setup-cred]"
+    sys.exit(1)

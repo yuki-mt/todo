@@ -3,3 +3,4 @@
 .git.json
 .importer.json
 .toggl.json
+/node_modules/

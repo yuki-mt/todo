@@ -3,7 +3,8 @@
 import json
 import os
 import urllib2
-from credential.trello import TrelloCredentialProvider
+from yukimt.task.credential.trello import TrelloCredentialProvider
+from yukimt.task.trello import TrelloManager
 
 
 class TrelloTodo(object):
@@ -13,13 +14,13 @@ class TrelloTodo(object):
         self.format_path = current_dir + "/format.txt"
         self.list_key = "list"
         self.keys = [self.list_key]
-
         provider = TrelloCredentialProvider()
         self.cred = provider.get()
+        self.manager = TrelloManager()
 
     def generate(self):
         conf = self.get_conf()
-        cards = self.get_cards(conf[self.list_key]['id'])
+        cards = self.manager.get_cards(conf[self.list_key]['id'])
         names = [c['name'].encode('utf-8') for c in cards]
 
         self.output(names)
@@ -71,45 +72,11 @@ class TrelloTodo(object):
         print result
 
     def ask(self):
-        board = self.get_board()
-        t_list = self.get_list(board['id'])
+        print "Input Board and List name in Trello. (The list is source of todo list)"
+        board = self.manager.get_board()
+        t_list = self.manager.get_list(board['id'])
         return {self.list_key: t_list}
             
-    def get_board(self):
-        url = "https://trello.com/1/members/%s/boards?key=%s&token=%s&fields=name" % (
-            self.cred['username'], self.cred['key'], self.cred['token']
-        )
-        return self.get_data("Board", url)
-
-    def get_list(self, board_id):
-        url = "https://trello.com/1/boards/%s/lists?key=%s&token=%s&fields=name" % (
-            board_id, self.cred['key'], self.cred['token']
-        )
-        return self.get_data(self.list_key, url)
-
-    def get_cards(self, list_id):
-        url = "https://trello.com/1/lists/%s/cards?key=%s&token=%s&fields=name" % (
-            list_id, self.cred['key'], self.cred['token']
-        )
-        result = urllib2.urlopen(url)
-        response = json.loads(result.read())
-        result.close()
-        return response
-
-    def get_data(self, key, url):
-        ask_str = "target Trello %s name: " % key
-        new_name = raw_input(ask_str)
-        new_name = new_name.decode('utf-8')
-
-        result = urllib2.urlopen(url)
-        response = json.loads(result.read())
-        result.close()
-        #TODO: throw if not authorized
-        for b in response:
-            if b['name'] == new_name:
-                return b
-        #TODO: throw exception
-
     def save(self, conf):
         with open(self.conf_path, 'w') as f:
             f.write(json.dumps(conf))

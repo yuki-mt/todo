@@ -3,7 +3,7 @@
 import json
 import os
 import urllib2
-from credential.toggl import TogglCredentialProvider
+from yukimt.task.credential.toggl import TogglCredentialProvider
 import datetime
 import math
 import base64
@@ -36,7 +36,7 @@ class TogglDone(object):
                     if loop_started:
                         loop_started = False
                         for t in tasks:
-                            result += loop_format % (t['hours'], t['title'])
+                            result += loop_format % (t['hours'], t['title'].encode('utf-8'))
                     else:
                         loop_started = True
                 else:

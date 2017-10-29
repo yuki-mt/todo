@@ -16,9 +16,8 @@ class TogglCredentialProvider(object):
 
     """
     @return {
-        username: <YOUR_USERNAME>,
-        key: <TRELLO_API_KEY>,
-        token: <TRELLO_API_TOKEN>
+        wid: <TOGGLE_WORKSPACE_ID>,
+        token: <TOGGLE_TOKEN>
     }
     """
     def get(self):
@@ -35,6 +34,10 @@ class TogglCredentialProvider(object):
             self.save(conf)
 
         return conf
+
+    def get_token(self):
+        conf = self.get()
+        return conf[self.token_key]
 
     def filter_conf(self, conf):
         result = {}
