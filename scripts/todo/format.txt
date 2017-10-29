@@ -1,0 +1,4 @@
+[My Project]
+<@loop>
+- [] %s
+<@loop>

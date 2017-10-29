@@ -1,0 +1,5 @@
+*.pyc
+.trello.json
+.git.json
+.importer.json
+.toggl.json
