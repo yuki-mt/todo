@@ -133,12 +133,6 @@ Enter your Heroku credentials:
 Email: YOUR_EMAIL
 Password: YOUR_PASSWORD
 $ heroku create
-# If you already input Trello account information, you can skip it.
-$ ym-task trello-list
-$ heroku config:set TARGET_LIST_ID=`ym-task trello-list`
-# If you already input Toggl account information, you can skip it.
-$ ym-task toggl-token
-$ heroku config:set TOGGL_TOKEN=`ym-task toggl-token`
 $ git push heroku master
 $ ym-task webhook
 Input Board and List Name in Trello for current work
@@ -147,6 +141,8 @@ target Trello List name: YOUR_LIST_NAME
 ## the URL that is opened when you execute "heroku open" command
 callback url: YOUR_HEROKU_URL
 Complete!
+$ heroku config:set TARGET_LIST_ID=`ym-task trello-list`
+$ heroku config:set TOGGL_TOKEN=`ym-task toggl-token`
 ```
 
 Now, when you put or create a card on YOUR_LIST_NAME, Toggle automatically start recording your task.  
