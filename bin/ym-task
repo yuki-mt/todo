@@ -52,28 +52,27 @@ elif action_type == "setup-cred":
     trello = TrelloCredentialProvider()
     toggl = TogglCredentialProvider()
     git = GitCredentialProvider()
-    if len(sys.argv) > 2 and sys.argv[2] == 'reset':
-        if len(sys.argv) > 3:
-            cred_type = sys.argv[3]
-            if cred_type == 'trello':
-                trello.reset()
-            elif cred_type == 'toggl':
-                toggl.reset()
-            elif cred_type == 'git':
-                git.reset()
-        else:
+    if len(sys.argv) > 2:
+        if sys.argv[2] == 'reset':
             trello.reset()
             toggl.reset()
             git.reset()
-    else:
-        if len(sys.argv) > 2:
-            cred_type = sys.argv[2]
-            if cred_type == 'trello':
+        elif sys.argv[2] == 'trello':
+            if len(sys.argv) > 3 and sys.argv[3] == 'reset':
+                trello.reset()
+            else:
                 trello.get()
-            elif cred_type == 'toggl':
+        elif sys.argv[2]== 'toggl':
+            if len(sys.argv) > 3 and sys.argv[3] == 'reset':
+                toggl.reset()
+            else:
                 toggl.get()
-            elif cred_type == 'git':
+        elif sys.argv[2] == 'git':
+            if len(sys.argv) > 3 and sys.argv[3] == 'reset':
                 git.reset()
+            else:
+                git.get()
+    else:
         trello.get()
         toggl.get()
         git.get()
