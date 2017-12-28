@@ -45,18 +45,18 @@ class GitCredentialProvider(object):
         return result
 
     def ask(self):
-        username = raw_input('Input username in Github: ')
-        password = raw_input('Input password in Github: ')
-        
-        url = 'https://api.github.com/authorizations'
-        data = '{"scopes":["repo"],"note":"zen-toggl-trello"}'
-        request = urllib2.Request(url, data)
-        base64string = base64.b64encode('%s:%s' % (username, password))
-        request.add_header("Authorization", "Basic %s" % base64string)
-
-        result = urllib2.urlopen(request)
-        response = json.loads(result.read())
-        result.close()
+        response = False
+        while not response:
+            username = raw_input('Input username in Github: ')
+            password = raw_input('Input password in Github: ')
+            try:
+                response = self.authenticate(username, password)
+            except urllib2.HTTPError as e:
+                if (e.code == 401):
+                    print('Invalid credentials. Please try again.')
+                    continue
+                else:
+                    raise e
 
         ask_str = """\
 Get Zenhub API Key in
@@ -71,6 +71,17 @@ Paste the key: """
             self.zen_key: zen,
             self.username_key: username
         }
+
+    def authenticate(self, username, password):
+        url = 'https://api.github.com/authorizations'
+        data = '{"scopes":["repo"],"note":"zen-toggl-trello"}'
+        base64string = base64.b64encode('%s:%s' % (username, password))
+        request = urllib2.Request(url, data, {'Authorization': 'Basic %s' % base64string})
+
+        result = urllib2.urlopen(request)
+        response = json.loads(result.read())
+        result.close()
+        return response
 
     def save(self, conf):
         with open(self.conf_path, 'w') as f:
