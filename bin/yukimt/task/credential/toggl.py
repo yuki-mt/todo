@@ -47,17 +47,18 @@ class TogglCredentialProvider(object):
         return result
 
     def ask(self):
-        email = raw_input('Input email in Toggl: ')
-        pw = raw_input('Input password in Toggl: ')
-
-        url = "https://www.toggl.com/api/v8/me"
-        request = urllib2.Request(url)
-        base64string = base64.b64encode('%s:%s' % (email, pw))
-        request.add_header("Authorization", "Basic %s" % base64string)
-
-        result = urllib2.urlopen(request)
-        response = json.loads(result.read())
-        result.close()
+        response = False
+        while not response:
+            email = raw_input('Input email in Toggl: ')
+            password = raw_input('Input password in Toggl: ')
+            try:
+                response = self.authenticate(email, password)
+            except urllib2.HTTPError as e:
+                if (e.code == 403):
+                    print('Invalid credentials. Please try again.')
+                    continue
+                else:
+                    raise e
 
         token = response['data']['api_token']
         workspaces = response['data']['workspaces']
@@ -66,16 +67,29 @@ class TogglCredentialProvider(object):
             wid = workspaces[0]['id']
         else:
             work_names = [w['name'] for w in workspaces]
-            name = raw_input("Choose workspace from %s: " % ",".join(work_names))
-            for w in workspaces:
-                if w['name'] == name:
-                    wid = w['id']
-            #TODO: ask again if not found
+            wid = False
+            while not wid:
+                name = raw_input("Choose workspace from %s: " % ",".join(work_names))
+                for w in workspaces:
+                    if w['name'] == name:
+                        wid = w['id']
+                if (not wid): print('Workspace not found.')
 
         return {
             self.wid_key: wid,
             self.token_key: token
         }
+
+    def authenticate(self, email, password):
+        url = "https://www.toggl.com/api/v8/me"
+        request = urllib2.Request(url)
+        base64string = base64.b64encode('%s:%s' % (email, password))
+        request.add_header("Authorization", "Basic %s" % base64string)
+
+        result = urllib2.urlopen(request)
+        response = json.loads(result.read())
+        result.close()
+        return response
 
     def save(self, conf):
         with open(self.conf_path, 'w') as f:
