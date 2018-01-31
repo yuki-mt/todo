@@ -1,6 +1,4 @@
-# TODO Manager
-## What is it
-Collaborate Github, Zenhub, Trello, and Toggl to manage your tasks.
+# TODO Manager: Collaborate Github, Zenhub, Trello, and Toggl to manage your tasks.
 
 ![Overall Description](https://raw.github.com/wiki/yuki-mt/todo/images/description.png)
 
@@ -198,3 +196,10 @@ Successfully delete Trello API data
 $ ym-task setup-cred toggl reset 
 Successfully delete Toggl API data
 ```
+
+## Contributing
+Always welcome for your contribution
+
+## License & Authors
+Author:: @yuki-mt  
+License:: MIT
